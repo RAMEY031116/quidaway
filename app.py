@@ -247,6 +247,65 @@ div.stButton>button:hover{background:var(--primary2)!important;transform:transla
 .qa-footer{text-align:center;color:var(--muted);margin-top:38px;padding-top:20px;border-top:1px solid var(--border);font-size:.9rem;line-height:1.7}
 div[data-testid="stMetric"]{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:18px;padding:14px}
 @media(max-width:900px){.qa-hero{padding:34px 24px;border-radius:25px}.qa-info-grid,.qa-aff-grid{grid-template-columns:1fr}.qa-result-img{min-height:260px}.qa-nav{align-items:flex-start;flex-direction:column}}
+
+.qa-route {
+    margin-top:18px;
+    padding:20px;
+    border-radius:24px;
+    background:var(--card2);
+    border:1px solid var(--border);
+    color:var(--text);
+}
+.qa-route h4 {
+    margin-top:0;
+    color:var(--text);
+}
+.qa-route-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:14px;
+}
+.qa-day-card {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:14px;
+    height:100%;
+}
+.qa-day-card b {
+    display:block;
+    color:var(--text);
+    margin-bottom:8px;
+}
+.qa-day-card ul {
+    margin:0;
+    padding-left:18px;
+    color:var(--muted);
+}
+.qa-route-meta {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+    margin-top:12px;
+}
+.qa-route-meta div {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:12px;
+}
+.qa-route-meta strong {
+    display:block;
+    color:var(--text);
+    margin-bottom:4px;
+}
+.qa-route-meta span {
+    color:var(--muted);
+    font-size:.9rem;
+}
+@media(max-width:900px){.qa-route-grid,.qa-route-meta{grid-template-columns:1fr}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -311,6 +370,124 @@ def render_affiliates(place):
 """, unsafe_allow_html=True)
 
 
+
+
+def trip_days_from_label(label):
+    if label == "Weekend":
+        return 2
+    if label == "3–5 days":
+        return 3
+    if label == "1 week":
+        return 5
+    if label == "2 weeks":
+        return 7
+    return 3
+
+
+def create_itinerary(place, trip_length, starting_from):
+    days = trip_days_from_label(trip_length)
+
+    base = place["name"]
+    vibe = place["primary_vibe"]
+
+    # Simple rule-based route plan. In WordPress this can be generated from destination fields
+    # or later upgraded to AI.
+    if vibe == "Hiking":
+        day_templates = [
+            ["Arrive and settle in", "Easy local walk", "Cheap local dinner"],
+            [place["things"][0], place["things"][1], "Sunset viewpoint"],
+            [place["things"][2], "Local market or old town", "Relaxed evening"],
+            ["Optional guided hike", "Scenic lunch stop", "Free viewpoint"],
+            ["Slow morning", "Final photos", "Travel back"],
+            ["Extra nature route", "Budget picnic", "Evening rest"],
+            ["Flexible spare day", "Backup rainy-day plan", "Return journey"],
+        ]
+        stay = "Guesthouse, hostel or apartment near transport links"
+        transport = "Public transport where possible; consider tours/car hire for remote trails"
+    elif vibe == "Beach":
+        day_templates = [
+            ["Arrive and check in", "Beach walk", "Simple local dinner"],
+            [place["things"][0], "Swim or coastal viewpoint", "Sunset by the water"],
+            [place["things"][1], "Local town exploring", "Budget seafood/local meal"],
+            ["Boat trip or nearby beach", "Relaxed afternoon", "Evening stroll"],
+            ["Slow morning", "Souvenir stop", "Travel back"],
+            ["Optional coastal route", "Beach picnic", "Rest evening"],
+            ["Flexible spare day", "Backup indoor plan", "Return journey"],
+        ]
+        stay = "Budget hotel, apartment or guesthouse near beach/transport"
+        transport = "Use buses/transfers; car hire only if moving between towns"
+    elif vibe == "City" or vibe == "Food" or vibe == "Culture":
+        day_templates = [
+            ["Arrive and check in", "Old town walk", "Budget food spot"],
+            [place["things"][0], place["things"][1], "Evening viewpoint or local area"],
+            [place["things"][2], "Cafe/market stop", "Relaxed final evening"],
+            ["Day trip or museum", "Local lunch", "Neighbourhood walk"],
+            ["Slow morning", "Final photos", "Travel back"],
+            ["Extra food/culture route", "Free attraction", "Evening explore"],
+            ["Flexible spare day", "Shopping/local market", "Return journey"],
+        ]
+        stay = "Budget hotel/apartment near metro, tram or walkable centre"
+        transport = "Walk and use local public transport instead of taxis"
+    else:
+        day_templates = [
+            ["Arrive and settle in", "Easy explore", "Cheap local dinner"],
+            [place["things"][0], place["things"][1], "Evening walk"],
+            [place["things"][2], "Local food stop", "Relaxed final evening"],
+            ["Optional day trip", "Scenic stop", "Free viewpoint"],
+            ["Slow morning", "Final photos", "Travel back"],
+            ["Extra flexible day", "Budget activity", "Evening rest"],
+            ["Backup day", "Local area", "Return journey"],
+        ]
+        stay = "Budget-friendly stay close to transport"
+        transport = "Use public transport and avoid unnecessary taxis"
+
+    itinerary = []
+    for i in range(days):
+        itinerary.append({
+            "day": f"Day {i+1}",
+            "items": day_templates[i]
+        })
+
+    return {
+        "days": days,
+        "stay": stay,
+        "transport": transport,
+        "starting_from": starting_from or "Your city",
+        "itinerary": itinerary,
+    }
+
+
+def render_route_planner(place, trip_length, starting_from):
+    plan = create_itinerary(place, trip_length, starting_from)
+
+    day_cards = ""
+    for day in plan["itinerary"]:
+        items = "".join([f"<li>{item}</li>" for item in day["items"]])
+        day_cards += f"""
+        <div class="qa-day-card">
+            <b>{day["day"]}</b>
+            <ul>{items}</ul>
+        </div>
+        """
+
+    st.markdown(f"""
+<div class="qa-route">
+  <h4>Suggested {plan["days"]}-day route plan</h4>
+  <p class="qa-muted">
+    This is a demo itinerary generated from the destination type, trip length and travel vibe.
+    In WordPress, this can be rule-based first, then upgraded to AI later.
+  </p>
+  <div class="qa-route-meta">
+    <div><strong>Start from</strong><span>{plan["starting_from"]}</span></div>
+    <div><strong>Stay style</strong><span>{plan["stay"]}</span></div>
+    <div><strong>Travel style</strong><span>{plan["transport"]}</span></div>
+  </div>
+  <div class="qa-route-grid">
+    {day_cards}
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 def render_result(place, score, scored):
     st.markdown('<div class="qa-result">', unsafe_allow_html=True)
     col_img, col_text = st.columns([0.95, 1.05], gap="large")
@@ -373,7 +550,7 @@ st.markdown("""
     <span class="qa-pill">💸 Budget-friendly ideas</span>
     <span class="qa-pill">🥾 Hiking, city, beach & nature</span>
     <span class="qa-pill">🧭 Decision maker</span>
-    <span class="qa-pill">🔗 Affiliate-ready demo</span>
+    <span class="qa-pill">🗺️ Route planner demo</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -425,11 +602,16 @@ if submitted:
     time.sleep(1.5)
     placeholder.empty()
     place, score, scored = pick_destination(region, budget, vibe, trip_length, difficulty)
-    st.session_state["result"] = {"place": place, "score": score, "scored": scored}
+    st.session_state["result"] = {"place": place, "score": score, "scored": scored, "trip_length": trip_length, "starting_from": starting_from}
 
 if st.session_state.get("result"):
     st.markdown("## Your QuidAway suggestion")
     render_result(st.session_state["result"]["place"], st.session_state["result"]["score"], st.session_state["result"]["scored"])
+    render_route_planner(
+        st.session_state["result"]["place"],
+        st.session_state["result"].get("trip_length", "3–5 days"),
+        st.session_state["result"].get("starting_from", "London"),
+    )
 
 st.markdown("""<div class="qa-ad">AdSense demo placement — this could appear after the tool or between destination sections once the real site is approved.</div>""", unsafe_allow_html=True)
 
@@ -461,6 +643,7 @@ with wp2:
 - Login and profiles later
 - “Want to go” and “Already visited” lists
 - User recommended routes
+- Route planner and itinerary generator
 - Destination pages for SEO
 - Google Sheets or Airtable as simple destination database
 """)
