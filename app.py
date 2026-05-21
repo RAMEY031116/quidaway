@@ -5,7 +5,7 @@ import streamlit as st
 # -----------------------------------------
 # PAGE CONFIG
 # -----------------------------------------
-st.set_page_config(page_title="QuidAway by bipzilla", page_icon="🌍", layout="wide")
+st.set_page_config(page_title="QuidAway by Bipzilla", page_icon="🌍", layout="wide")
 
 # -----------------------------------------
 # STYLE
@@ -218,4 +218,3 @@ st.markdown("""
     © 2026 QuidAway — Smart travel decisions
 </div>
 """, unsafe_allow_html=True)
-``
