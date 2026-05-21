@@ -236,7 +236,7 @@ def render_result(place, score, scored, trip_length, starting_from):
     c.info(f"**Another option:** {scored[1][1]['name'] if len(scored)>1 else place['similar']}")
     render_route(place, trip_length)
 
-st.markdown("<div class='qa-nav'><div class='qa-logo'>🌍 QuidAway</div><div class='qa-nav-links'><span class='qa-nav-chip'>Budget-first</span><span class='qa-nav-chip'>Escape finder</span><span class='qa-nav-chip'>Visual itinerary</span><span class='qa-nav-chip'>Affiliate-ready</span></div></div>", unsafe_allow_html=True)
+st.markdown("<div class='qa-nav'><div class='qa-logo'>🌍 QuidAway by BIPZILLA</div><div class='qa-nav-links'><span class='qa-nav-chip'>Budget-first</span><span class='qa-nav-chip'>Escape finder</span><span class='qa-nav-chip'>Visual itinerary</span><span class='qa-nav-chip'>Affiliate-ready</span></div></div>", unsafe_allow_html=True)
 st.markdown("""
 <div class="qa-hero">
   <h1>Find your budget escape.</h1>
