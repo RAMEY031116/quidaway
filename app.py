@@ -15,6 +15,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+APP_DATA_VERSION = "clean-wordpress-demo-v2"
+
+# Clear old cached result objects after app updates.
+# This prevents KeyError if Streamlit Cloud keeps an older session_state result
+# from a previous version of the destination data.
+if st.session_state.get("app_data_version") != APP_DATA_VERSION:
+    st.session_state["app_data_version"] = APP_DATA_VERSION
+    st.session_state["result"] = None
+
 
 # =========================================================
 # DESTINATION DATA
@@ -644,7 +653,10 @@ def calc_score(place, region, budget, vibe, trip_length, difficulty):
     elif budget == "Medium" and place["budget"] in ["Low", "High"]:
         score += 8
 
-    if vibe == "Surprise me" or vibe == place["primary_vibe"] or vibe in place["secondary_vibes"]:
+    primary_vibe = place.get("primary_vibe", "")
+    secondary_vibes = place.get("secondary_vibes", place.get("vibes", []))
+
+    if vibe == "Surprise me" or vibe == primary_vibe or vibe in secondary_vibes:
         score += 22
 
     if trip_length == "Flexible" or trip_length in place["trip_lengths"]:
@@ -729,32 +741,44 @@ def render_result(place, score, scored):
     with col_text:
         st.markdown('<div class="qa-result-body">', unsafe_allow_html=True)
 
+        # Safe fallbacks make the app resilient if old session_state data exists
+        primary_vibe = place.get("primary_vibe", place.get("vibes", ["Escape"])[0] if place.get("vibes") else "Escape")
+        secondary_vibes = place.get("secondary_vibes", place.get("vibes", [])[1:4])
+        budget_range = place.get("budget_range", place.get("estimate", "Estimate varies"))
+        daily_spend = place.get("daily_spend", "Varies by season")
+        best_months = place.get("best_months", "Depends on season")
+        decision_summary = place.get("decision_summary", "A practical escape idea based on your selected budget and vibe.")
+        good_to_know = place.get("good_to_know", "Check live prices and travel details before planning.")
+        budget_tip = place.get("budget_tip", "Travel outside peak dates and compare accommodation areas.")
+        avoid_if = place.get("avoid_if", "Avoid if the destination style does not match your travel mood.")
+        things = place.get("things", ["Explore the area", "Compare stays", "Check transport options"])
+
         st.markdown(
             f"""
-            <h2 class="qa-destination">{place["name"]}</h2>
-            <div class="qa-country">{place["country"]} · {place["region"]}</div>
+            <h2 class="qa-destination">{place.get("name", "Destination")}</h2>
+            <div class="qa-country">{place.get("country", "")} · {place.get("region", "")}</div>
             <div>
-                <span class="qa-primary-badge">{place["primary_vibe"]}</span>
-                {"".join([f"<span class='qa-tag'>{v}</span>" for v in place["secondary_vibes"][:3]])}
+                <span class="qa-primary-badge">{primary_vibe}</span>
+                {"".join([f"<span class='qa-tag'>{v}</span>" for v in secondary_vibes[:3]])}
             </div>
             {score_bar("QuidAway decision match", score)}
             <div class="qa-grid-3">
-                <div class="qa-mini"><strong>Budget range</strong><span>{place["budget_range"]}</span></div>
-                <div class="qa-mini"><strong>Daily spend</strong><span>{place["daily_spend"]}</span></div>
-                <div class="qa-mini"><strong>Best time</strong><span>{place["best_months"]}</span></div>
+                <div class="qa-mini"><strong>Budget range</strong><span>{budget_range}</span></div>
+                <div class="qa-mini"><strong>Daily spend</strong><span>{daily_spend}</span></div>
+                <div class="qa-mini"><strong>Best time</strong><span>{best_months}</span></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        st.markdown(f"**Quick decision:** {place['decision_summary']}")
-        st.markdown(f"**Why this place works:** {place['why']}")
-        st.markdown(f"**Good to know:** {place['good_to_know']}")
-        st.markdown(f"**Budget tip:** {place['budget_tip']}")
-        st.markdown(f"**Avoid if:** {place['avoid_if']}")
+        st.markdown(f"**Quick decision:** {decision_summary}")
+        st.markdown(f"**Why this place works:** {place.get('why', 'This destination matches your selected travel style.')}")
+        st.markdown(f"**Good to know:** {good_to_know}")
+        st.markdown(f"**Budget tip:** {budget_tip}")
+        st.markdown(f"**Avoid if:** {avoid_if}")
 
         st.markdown("**Simple trip ideas:**")
-        for thing in place["things"]:
+        for thing in things:
             st.markdown(f"- {thing}")
 
         render_affiliate_block(place)
@@ -763,8 +787,8 @@ def render_result(place, score, scored):
 
     st.markdown("### More decision help")
     a, b, c = st.columns(3)
-    a.info(f"**Cheaper option:** {place['cheaper']}")
-    b.info(f"**Similar vibe:** {place['similar']}")
+    a.info(f"**Cheaper option:** {place.get('cheaper', 'Show another lower-budget option')}")
+    b.info(f"**Similar vibe:** {place.get('similar', 'Show a similar destination')}")
     another = scored[1][1]["name"] if len(scored) > 1 else place["similar"]
     c.info(f"**Another good match:** {another}")
 
