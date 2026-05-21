@@ -119,7 +119,7 @@ html, body, [class*="css"] {
 # -----------------------------------------
 st.markdown("""
 <div class="navbar">
-    <div class="nav-logo">🌍 QuidAway</div>
+    <div class="nav-logo">🌍 QuidAway by bipzilla</div>
 </div>
 """, unsafe_allow_html=True)
 
