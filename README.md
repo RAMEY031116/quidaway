@@ -1,5 +1,4 @@
-Try AI directly in your favourite apps … Use Gemini to generate drafts and refine content, plus get Gemini Pro with access to Google's next-gen AI
-# QuidAway Streamlit Prototype
+
 
 A polished Streamlit dummy prototype for a budget travel decision-maker.
 
