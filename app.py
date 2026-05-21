@@ -306,6 +306,15 @@ div[data-testid="stMetric"]{background:var(--card);color:var(--text);border:1px 
 }
 @media(max-width:900px){.qa-route-grid,.qa-route-meta{grid-template-columns:1fr}}
 
+
+.qa-day-card li {
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+.qa-day-card b {
+    color: var(--text);
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -460,33 +469,72 @@ def create_itinerary(place, trip_length, starting_from):
 def render_route_planner(place, trip_length, starting_from):
     plan = create_itinerary(place, trip_length, starting_from)
 
-    day_cards = ""
-    for day in plan["itinerary"]:
-        items = "".join([f"<li>{item}</li>" for item in day["items"]])
-        day_cards += f"""
-        <div class="qa-day-card">
-            <b>{day["day"]}</b>
-            <ul>{items}</ul>
-        </div>
-        """
+    st.markdown("## Suggested route plan")
 
-    st.markdown(f"""
-<div class="qa-route">
-  <h4>Suggested {plan["days"]}-day route plan</h4>
-  <p class="qa-muted">
-    This is a demo itinerary generated from the destination type, trip length and travel vibe.
-    In WordPress, this can be rule-based first, then upgraded to AI later.
-  </p>
-  <div class="qa-route-meta">
-    <div><strong>Start from</strong><span>{plan["starting_from"]}</span></div>
-    <div><strong>Stay style</strong><span>{plan["stay"]}</span></div>
-    <div><strong>Travel style</strong><span>{plan["transport"]}</span></div>
-  </div>
-  <div class="qa-route-grid">
-    {day_cards}
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="qa-route">
+          <h4>Suggested {plan["days"]}-day route plan</h4>
+          <p class="qa-muted">
+            This is a demo itinerary generated from the destination type, trip length and travel vibe.
+            In WordPress, this can be rule-based first, then upgraded to AI later.
+          </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    meta1, meta2, meta3 = st.columns(3)
+    with meta1:
+        st.markdown(
+            f"""
+            <div class="qa-mini">
+                <strong>Start from</strong>
+                <span>{plan["starting_from"]}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with meta2:
+        st.markdown(
+            f"""
+            <div class="qa-mini">
+                <strong>Stay style</strong>
+                <span>{plan["stay"]}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with meta3:
+        st.markdown(
+            f"""
+            <div class="qa-mini">
+                <strong>Travel style</strong>
+                <span>{plan["transport"]}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("### Day-by-day idea")
+
+    # Native Streamlit columns avoid raw HTML being printed as text.
+    days = plan["itinerary"]
+    for start in range(0, len(days), 3):
+        cols = st.columns(min(3, len(days) - start))
+        for col, day in zip(cols, days[start:start + 3]):
+            with col:
+                st.markdown(
+                    f"""
+                    <div class="qa-day-card">
+                        <b>{day["day"]}</b>
+                        <ul>
+                            {"".join([f"<li>{item}</li>" for item in day["items"]])}
+                        </ul>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
 def render_result(place, score, scored):
     st.markdown('<div class="qa-result">', unsafe_allow_html=True)
