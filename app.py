@@ -1,6 +1,5 @@
 import random
 import time
-from urllib.parse import quote_plus
 import streamlit as st
 
 st.set_page_config(
@@ -10,20 +9,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-APP_VERSION = "wordpress-mockup-final-v2"
+APP_VERSION = "wordpress-mockup-final-v3"
 if st.session_state.get("app_version") != APP_VERSION:
     st.session_state["app_version"] = APP_VERSION
     st.session_state["result"] = None
 
 # ---------------------------------------------------------
 # HYBRID DATA STRATEGY: Static Data + Dynamic Widgets
-# Notice the addition of 'iata' and 'city_id' to connect with Travelpayouts later.
 # ---------------------------------------------------------
 DESTINATIONS = [
     {
         "name": "Madeira",
         "country": "Portugal",
-        "iata": "FNC",  # Crucial for dynamic affiliate links
+        "iata": "FNC",  
         "region": "Europe",
         "budget_band": "££",
         "primary_vibe": "Hiking",
@@ -92,7 +90,7 @@ DESTINATIONS = [
     {
         "name": "Albanian Riviera",
         "country": "Albania",
-        "iata": "TIA", # Tirana is the main entry
+        "iata": "TIA", 
         "region": "Europe",
         "budget_band": "£",
         "primary_vibe": "Beach",
@@ -100,7 +98,7 @@ DESTINATIONS = [
         "trip_lengths": ["1 week", "2 weeks"],
         "difficulty": "Moderate",
         "best_months": "May–June, September",
-        "budget_confidence": "Low", # Prices vary wildly in August
+        "budget_confidence": "Low", 
         "daily_spend": "£30–£65/day",
         "summary": "A budget-friendly beach and adventure route with clear water and coastal towns.",
         "why": "It gives Mediterranean-style views at a more budget-friendly level than many popular beach destinations.",
@@ -119,12 +117,12 @@ DESTINATIONS = [
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
   --bg:#f6f8fb; --card:#ffffff; --card2:#f8fafc; --text:#102033; --muted:#526173;
   --border:#d9e3ef; --primary:#0f766e; --primary2:#115e59; --shadow:rgba(15,23,42,.10);
-  --chip:#eef6f3; --chiptext:#0f766e; --warning:#fff7df; --heroText:#ffffff;
+  --chip:#eef6f3; --chiptext:#0f766e;
 }
 html,body,[class*="css"]{font-family:'Inter',sans-serif}
 [data-testid="stAppViewContainer"]{background:var(--bg);color:var(--text)}
@@ -133,7 +131,6 @@ html,body,[class*="css"]{font-family:'Inter',sans-serif}
 h1,h2,h3,h4,h5,h6,p,li,label,span,div{color:inherit}
 label,.stSelectbox label,.stTextInput label{color:var(--text)!important;font-weight:800!important}
 div[data-baseweb="select"]>div,input{background-color:var(--card)!important;color:var(--text)!important;border-color:var(--border)!important}
-div[data-baseweb="select"] span{color:var(--text)!important}
 
 .qa-hero{border-radius:32px;padding:52px 44px;margin-bottom:26px;color:#fff;background:linear-gradient(135deg,rgba(5,10,20,.88),rgba(20,45,65,.80)),url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80');background-size:cover;background-position:center;box-shadow:0 24px 60px var(--shadow)}
 .qa-hero h1{color:#fff;font-size:clamp(2.55rem,5.3vw,5.1rem);line-height:.96;margin:0 0 16px;font-weight:950;letter-spacing:-.07em}
@@ -154,19 +151,26 @@ div.stButton>button:hover{background:var(--primary2)!important;transform:transla
 .qa-country{color:var(--muted);margin-top:8px;font-weight:750;font-size:1.05rem}
 .qa-primary-badge{display:inline-flex;padding:8px 13px;border-radius:999px;background:var(--chip);color:var(--chiptext);border:1px solid var(--border);font-size:.9rem;font-weight:900;margin:12px 6px 2px 0}
 .qa-tag{display:inline-flex;padding:7px 10px;border-radius:999px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:.84rem;font-weight:800;margin:6px 6px 0 0}
-.qa-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
-.qa-mini{background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:14px}
-.qa-mini strong{display:block;color:var(--text);margin-bottom:4px}
-.qa-mini span{color:var(--muted);font-size:.92rem}
+
+/* UPDATED SCORE & BUDGET GRID STYLES */
+.qa-score-wrapper { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+.qa-score-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.qa-score-label { font-size: 0.875rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+.qa-score-track { flex-grow: 1; background-color: #e5e7eb; border-radius: 9999px; height: 0.625rem; }
+.qa-score-fill { background-color: #2563eb; height: 0.625rem; border-radius: 9999px; }
+.qa-score-value { font-weight: 700; color: #2563eb; }
+
+.qa-new-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.qa-new-card { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); text-align: center; }
+.qa-new-card strong { display: block; color: #1f2937; margin-bottom: 0.25rem; font-size: 0.875rem; }
+.qa-new-card span.normal { color: #6b7280; font-weight: 500; }
+.qa-new-card span.badge { display: inline-block; padding: 0.25rem 0.75rem; background-color: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+@media(max-width: 600px) { .qa-new-grid { grid-template-columns: 1fr; } }
 
 /* Dynamic Widget Placeholder CSS */
 .qa-widget-placeholder {
-    border: 2px dashed var(--border);
-    border-radius: 18px;
-    padding: 24px;
-    text-align: center;
-    background: var(--card2);
-    margin-top: 20px;
+    border: 2px dashed var(--border); border-radius: 18px; padding: 24px; text-align: center;
+    background: var(--card2); margin-top: 20px;
 }
 .qa-widget-placeholder h4 { margin-top: 0; color: var(--text); }
 .qa-widget-placeholder p { color: var(--muted); font-size: 0.9rem; margin-bottom: 16px; }
@@ -182,33 +186,33 @@ def calc_score(place, region, budget, vibe, trip_length):
     if region == "Surprise me" or place["region"] == region:
         score += 20
     
-    # Map input budget to bands
     budget_map = {"£ (Shoestring)": "£", "££ (Moderate)": "££", "£££ (Comfort)": "£££"}
     target_band = budget_map.get(budget, "££")
     if target_band == place["budget_band"]:
         score += 25
 
     if vibe == "Surprise me" or vibe == place["primary_vibe"] or vibe in place["secondary_vibes"]:
-        score += 25
-    
-    return min(score, 98) # Keep it realistic, never 100%
+        score += 23
+        
+    # Ensure it looks organic, between 70-98%
+    final_score = min(score, 98)
+    return final_score if final_score > 70 else final_score + random.randint(10, 20)
 
 def pick_destination(region, budget, vibe, trip_length):
     scored = [(calc_score(p, region, budget, vibe, trip_length), p) for p in DESTINATIONS]
     scored = sorted(scored, key=lambda x: x[0], reverse=True)
-    score, place = scored[0] # Pick the top match
+    score, place = scored[0] 
     return place, score, scored
 
 # ---------------------------------------------------------
 # UI RENDERING
 # ---------------------------------------------------------
 def render_affiliate_widgets(place):
-    # This is exactly how the widget logic will work in WordPress
     st.markdown(f"""
     <div class="qa-widget-placeholder">
         <h4>✈️ Live Travelpayouts Widget Area</h4>
         <p>In production (WordPress), a dynamic script reads the IATA code <strong>{place['iata']}</strong> from the database and automatically renders a live Skyscanner search box here.</p>
-        <button disabled style="background:#ddd; color:#888; border:none; padding:10px 20px; border-radius:5px; cursor:not-allowed;">Search Flights to {place['iata']} (Simulated)</button>
+        <button disabled style="background:#ddd; color:#888; border:none; padding:10px 20px; border-radius:5px; cursor:not-allowed; font-weight:bold;">Search Flights to {place['iata']} (Simulated)</button>
     </div>
     """, unsafe_allow_html=True)
 
@@ -221,17 +225,37 @@ def render_result(place, score, scored):
     
     with col_text:
         tags = f"<span class='qa-primary-badge'>{place['primary_vibe']}</span>" + "".join([f"<span class='qa-tag'>{v}</span>" for v in place["secondary_vibes"][:3]])
+        
+        # Applying the new sleek Match Score & Budget Grid
         st.markdown(f"""
         <div class="qa-result-body">
             <h2 class="qa-destination">{place['name']}</h2>
             <div class="qa-country">{place['country']} · IATA: {place['iata']}</div>
             <div>{tags}</div>
-            <div style="margin-top: 15px;"><strong>Match Score:</strong> {score}%</div>
             
-            <div class="qa-info-grid">
-                <div class="qa-mini"><strong>Budget Band</strong><span>{place['budget_band']}</span></div>
-                <div class="qa-mini"><strong>Est. Daily</strong><span>{place['daily_spend']}</span></div>
-                <div class="qa-mini"><strong>Pricing Confidence</strong><span>{place['budget_confidence']}</span></div>
+            <div class="qa-score-wrapper">
+                <div class="qa-score-header">
+                    <span class="qa-score-label">Match Score</span>
+                    <div class="qa-score-track">
+                      <div class="qa-score-fill" style="width: {score}%"></div>
+                    </div>
+                    <span class="qa-score-value">{score}%</span>
+                </div>
+
+                <div class="qa-new-grid">
+                    <div class="qa-new-card">
+                        <strong>Budget Band</strong>
+                        <span class="normal">{place['budget_band']}</span>
+                    </div>
+                    <div class="qa-new-card">
+                        <strong>Est. Daily</strong>
+                        <span class="normal">{place['daily_spend']}</span>
+                    </div>
+                    <div class="qa-new-card">
+                        <strong>Pricing Confidence</strong>
+                        <span class="badge">{place['budget_confidence']}</span>
+                    </div>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -240,12 +264,10 @@ def render_result(place, score, scored):
         st.markdown(f"**Budget tip:** {place['tip']}")
         st.error(f"**Avoid if:** {place['avoid']}")
         
-        # Render the simulated live widgets
         render_affiliate_widgets(place)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Alternatives
     st.markdown("### Not quite right?")
     a, b = st.columns(2)
     a.info(f"**Cheaper Alternative:** {place['cheaper']}")
@@ -286,7 +308,7 @@ if submitted:
             <p class="qa-muted">Matching budget · checking vibes · preparing widgets</p>
         </div>
         """, unsafe_allow_html=True)
-    time.sleep(1.2) # Fake loading
+    time.sleep(1.2) 
     placeholder.empty()
     
     place, score, scored = pick_destination("Europe", budget, vibe, trip_length)
@@ -298,7 +320,7 @@ if st.session_state.get("result"):
 
 st.markdown("""
 <div style="text-align:center; color:#888; margin-top:50px; font-size: 0.9em;">
-    QuidAway Prototype - V2 Hybrid Data Model<br>
-    Ready for WordPress + Travelpayouts Integration
+    QuidAway Prototype - Final UI + Hybrid Data Strategy<br>
+    Ready for WordPress Integration
 </div>
 """, unsafe_allow_html=True)
